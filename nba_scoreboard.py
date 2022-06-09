@@ -2,9 +2,6 @@ from turtle import home
 from requests import get
 from pprint import PrettyPrinter
 from datetime import date
-from nba_api.stats.static import players
-from nba_api.stats.static import teams
-from nba_api.stats import endpoints 
 import pandas as pd
 
 
@@ -26,17 +23,38 @@ def get_game_info(): # SCRAPED FROM NBA SITE
     return game_info
 
 
-def get_league_schedule(): # LEAGUE SCHEDULE URL
+def get_finals_schedule(): # LEAGUE SCHEDULE URL
     schedule_info = get(SCHEDULE_URL).json()['leagueSchedule']['gameDates']
+    print('NBA FINALS')
+    print()
     for i in range(222, 229):
         finals_schedule = schedule_info[i]['games']
         for game in finals_schedule:
-            arenaName = game['arenaName']
+            
+            arenaName = game['arenaName'] #GENERAL SERIES INFO
             seriesScore = game['seriesText']
-            awayTeam = game['awayTeam']['teamName']
-            homeTeam = game['homeTeam']['teamName']
-            printer.pprint(game)
-            print(awayTeam + " vs. " + homeTeam)
+            gameNumber = game['seriesGameNumber']
+
+            
+            awayTeam = game['awayTeam']['teamName'] # AWAY TEAM INFO
+            awayAbrev = game['awayTeam']['teamTricode']
+            awayTeamScore = game['awayTeam']['score']
+            
+            homeTeam = game['homeTeam']['teamName'] # HOME TEAM INFO
+            homeAbrev = game['homeTeam']['teamTricode']
+            homeTeamScore = game['homeTeam']['score']
+
+            print(awayTeam + " vs. " + homeTeam) #MATCHUP
+            print(gameNumber + ' ' + '(' + seriesScore + ')')
+            
+            print('----------------------------')
+            
+            print(" " + awayAbrev + "  " + str(awayTeamScore)) #SCORES
+            print(" " + homeAbrev + "  " + str(homeTeamScore))
+            
+            print() # BUFFER
+            print()
+            # printer.pprint(game)
 
 def get_scoreboard(): # FORMATTING AND PRINTING TO STANDARD OUTPUT
     scoreboard = get_links()['currentScoreboard']
@@ -93,4 +111,4 @@ def get_scoreboard(): # FORMATTING AND PRINTING TO STANDARD OUTPUT
 # printer.pprint(get_game_info())
 # get_scoreboard()
 # printer.pprint(get_links())
-get_league_schedule()
+get_finals_schedule()
