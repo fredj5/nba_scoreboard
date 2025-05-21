@@ -104,33 +104,26 @@ def games():
         return jsonify({"error": str(e)}), 500
     
 @retry
+def get_player_career_stats(player_id):
+    career = playercareerstats.PlayerCareerStats(player_id=player_id)
+    df = career.get_data_frames()[0]  # usually first df is season-by-season stats
+    return df
+
 def find_player_id(player_name):
     all_players = players.get_players()
-    names = [player["full_name"] for player in all_players]
+    names = [p['full_name'] for p in all_players]
     match = difflib.get_close_matches(player_name, names, n=1)
     if match:
-        return next(player["id"] for player in all_players if player["full_name"] == match[0])
+        return next(p['id'] for p in all_players if p['full_name'] == match[0])
     return None
-
-@retry
-def get_player_playoff_stats(player_id):
-    career = playercareerstats.PlayerCareerStats(player_id=player_id)
-    df = career.get_data_frames()[0]
-    # Filter for Playoffs season type and current season if you want
-    playoffs_df = df[(df['SEASON_TYPE'] == 'Playoffs') & (df['SEASON_ID'] == '2024-25')]
-    if playoffs_df.empty:
-        return {}
-    return playoffs_df.iloc[0].to_dict()
-
-@app.route('/player_stats/<player_name>')
-def player_stats(player_name):
+    
+@app.route('/player_career_stats/<player_name>')
+def player_career_stats(player_name):
     player_id = find_player_id(player_name)
     if player_id is None:
         return jsonify({"error": "Player not found"}), 404
-    stats = get_player_playoff_stats(player_id)
-    if not stats:
-        return jsonify({"message": f"No playoff stats found for {player_name} in 2024-25"}), 404
-    return jsonify(stats)
+    df = get_player_career_stats(player_id)
+    return jsonify(df.to_dict(orient='records'))
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
